@@ -1,0 +1,927 @@
+--- /// Library
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+
+--- /// Window
+local Window = Rayfield:CreateWindow({
+	Name = "SM2",
+	LoadingTitle = "South Modders 2",
+	LoadingSubtitle = "by sinmcity#3193",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = nil,
+		FileName = "sM2f"
+	},
+        Discord = {
+        	Enabled = false,
+        	Invite = "sirius",
+        	RememberJoins = true
+        },
+
+	KeySystem = false,
+	KeySettings = {
+		Title = "Sirius Hub",
+		Subtitle = "Key System",
+		Note = "Join the discord (discord.gg/sirius)",
+		FileName = "SiriusKey",
+		SaveKey = true,
+		GrabKeyFromSite = false,
+		Key = "Hello"
+	}
+})
+
+--- /// (G) Variables
+getgenv().settings = {
+    Flyspeed = 50;
+    FlyBind = Enum.KeyCode.Q;
+    PunchAura = false;
+    PunchAuraBind = Enum.KeyCode.Y;
+    Bodypart = 'Head';
+    MaxDist = 20;
+    SpeedVel = 25;
+    SpeedBind = "e";
+    RootAnchorBypassed = false; -- dont touch plz
+}
+
+--- /// (S) Variables
+local OnRender = game:GetService("RunService").RenderStepped
+local UIS = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+--- /// Variables
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local PlayerGui = Player.PlayerGui
+local Camera = workspace.CurrentCamera
+local Mouse = Player:GetMouse()
+local Char = Player.Character
+local Head = Char:WaitForChild("Head")
+local Humanoid = Char:WaitForChild("Humanoid")
+local HumanoidRP = Char:WaitForChild("HumanoidRootPart")
+
+--- /// Tabs
+local MainTab = Window:CreateTab("Main")
+local Teleports = Window:CreateTab("Teleports")
+
+--- /// Sections
+
+--- /// Functions
+local RootBypass = function()
+
+        local Player = game:GetService("Players").LocalPlayer
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        local Root = Character:FindFirstChild("HumanoidRootPart")
+
+        Player.CharacterAdded:Connect(function(C)
+            Root = C:WaitForChild("HumanoidRootPart")
+            wait(0.5)
+            for _, C in pairs(getconnections(Root:GetPropertyChangedSignal("Anchored"))) do C:Disable() end
+        end)
+        
+        local GameMT = getrawmetatable(game)
+        local __oldindex = GameMT.__index
+        setreadonly(GameMT, false)
+        GameMT.__index = newcclosure(function(self, Key)
+            if self == Root and Key == "Anchored" then 
+                return false 
+            end
+            return __oldindex(self, Key)
+        end)
+        
+        setreadonly(GameMT, true)
+    end
+end
+
+local BypassAntiCheat = function()
+    local NeededPart = nil
+    local PartCFrame = CFrame.new(-23.6783867, 40.0809975, 92.7621765, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+    
+    for i,v in pairs(game.Workspace:GetChildren()) do
+        if v:IsA("Part") then
+            if v.CFrame == PartCFrame then
+                v:Destroy()
+                break
+            end
+        end
+    end
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+         pcall(function()
+            if Char:FindFirstChild("Script") then
+                Char:FindFirstChild("Script"):Destroy();
+            end
+        end) pcall(function()
+            if Char:FindFirstChild("lolxd6") then
+                Char:FindFirstChild("lolxd6"):Destroy();
+            end
+        end) pcall(function()
+            if Char:FindFirstChild("lolxd555") then
+                Char:FindFirstChild("lolxd555"):Destroy();
+            end
+        end) pcall(function()
+            if game.ReplicatedStorage:FindFirstChild("XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD") then
+                game.ReplicatedStorage:FindFirstChild("XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"):Destroy();
+            end
+        end)
+    end)
+end
+
+local FOV = MainTab:CreateInput({
+	Name = "Field Of View",
+	PlaceholderText = "Type FOV number",
+	RemoveTextAfterFocusLost = true,
+
+	Callback = function(Text)
+        if Text ~= '' or Text ~= ' ' then
+            if tonumber(Text) then
+                if _G.Loaded then
+                    poop:Disconnect()
+                else
+                    
+                _G.Loaded = true
+                end
+
+                poop =  function() 
+                    while Loaded do
+                        Camera.FieldOfView = tonumber(Text)
+                    end
+                end
+            end
+        end
+	end,
+})
+
+local ClickTp = function()
+        Mouse.Button1Down:Connect(function()
+            if not game.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then return end
+            if not Mouse.Target then return end
+
+            Char:MoveTo(Mouse.Hit.p)
+        end)
+end
+
+local DisableBob = function()
+    pcall(function()
+        if PlayerGui["Camera_Bob"] ~= nil then
+            PlayerGui["Camera_Bob"]:Destroy()
+        else
+            return
+        end 
+    end)
+end
+
+local DisableBlur = function()
+    pcall(function()
+        for i, v in pairs(Camera:GetChildren()) do
+            if v:IsA("BlurEffect") and v.Name == 'BLUR' then
+                v:Remove()
+            end
+        end
+    end)
+end
+
+local GetClosestPlayer = function()
+    local target = nil
+    local maxDist = settings.MaxDist
+    
+    for _,v in pairs(Players:GetPlayers()) do
+        if v.Character and v ~= Player then
+            if v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+                if (HumanoidRP.Position - v.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude < maxDist then
+                    target = v.Character
+                end
+            end
+        end
+    end
+    return target
+end
+
+local FindPerson = function(person)
+    local Persona
+    for i,v in pairs(Players:GetChildren()) do
+        if string.sub(string.lower(v.Name), 1, string.len(person)) == string.lower(person) then
+            Persona = v.Name
+        end
+    end
+
+    return Persona
+end
+
+local XPFarm = function()
+    local GC = getconnections or get_signal_cons
+
+    if GC then
+        for i,v in pairs(GC(Player.Idled)) do
+            if v["Disable"] then
+                v["Disable"](v)
+            elseif v["Disconnect"] then
+                v["Disconnect"](v)
+            end
+        end
+    end
+    
+    game:GetService("RunService").Stepped:Connect(function()
+        HumanoidRP.CFrame = CFrame.new(-425.214722, 68.4271393, 590.490295, 0.526686668, 7.59660992e-08, 0.850059509, 2.90774294e-09, 1, -9.11672302e-08, -0.850059509, 5.04883175e-08, 0.526686668)
+    end)
+end
+
+local CBringTarget = function(Player)
+    Players[Player].Character.HumanoidRootPart.CFrame = CFrame.new(HumanoidRP.CFrame.Position + HumanoidRP.CFrame.lookVector * 3.6)
+end
+--- /// Buttons & Sliders & Others
+local FlyT = MainTab:CreateButton({
+	Name = "Fly",
+	Callback = function()
+        spawn(function()
+            RootBypass()
+            local C1, C2, C3;
+            local Nav = {Flying = false, Forward = false, Backward = false, Left = false, Right = false}
+            
+            C1 = UIS.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.Keyboard then
+                    if Input.KeyCode == settings.FlyBind then
+                        Nav.Flying = not Nav.Flying
+                        HumanoidRP.Anchored = Nav.Flying
+                    elseif Input.KeyCode == Enum.KeyCode.W then
+                        Nav.Forward = true
+                    elseif Input.KeyCode == Enum.KeyCode.S then
+                        Nav.Backward = true
+                    elseif Input.KeyCode == Enum.KeyCode.A then
+                        Nav.Left = true
+                    elseif Input.KeyCode == Enum.KeyCode.D then
+                        Nav.Right = true
+                    end
+                end
+            end)
+            
+            C2 = UIS.InputEnded:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.Keyboard then
+                    if Input.KeyCode == Enum.KeyCode.W then
+                        Nav.Forward = false
+                    elseif Input.KeyCode == Enum.KeyCode.S then
+                        Nav.Backward = false
+                    elseif Input.KeyCode == Enum.KeyCode.A then
+                        Nav.Left = false
+                    elseif Input.KeyCode == Enum.KeyCode.D then
+                        Nav.Right = false
+                    end
+                end
+            end)
+            
+            C3 = Camera:GetPropertyChangedSignal("CFrame"):Connect(function()
+                if Nav.Flying then
+                    HumanoidRP.CFrame = CFrame.new(HumanoidRP.CFrame.Position, HumanoidRP.CFrame.Position + Camera.CFrame.LookVector)
+                end
+            end)
+            
+            while true do
+                local Delta = OnRender:Wait()
+                
+                if Nav.Flying then
+                    if Nav.Forward then
+                        HumanoidRP.CFrame = HumanoidRP.CFrame + (Camera.CFrame.LookVector * (Delta * settings.Flyspeed))
+                    end
+
+                    if Nav.Backward then
+                        HumanoidRP.CFrame = HumanoidRP.CFrame + (-Camera.CFrame.LookVector * (Delta * settings.Flyspeed))
+                    end
+
+                    if Nav.Left then
+                        HumanoidRP.CFrame = HumanoidRP.CFrame + (-Camera.CFrame.RightVector * (Delta * settings.Flyspeed))
+                    end
+
+                    if Nav.Right then
+                        HumanoidRP.CFrame = HumanoidRP.CFrame + (Camera.CFrame.RightVector * (Delta * settings.Flyspeed))
+                    end
+                end
+            end
+        end)
+	end,
+})
+
+local FlySpeedSlide = MainTab:CreateSlider({
+	Name = "Fly Speed",
+	Range = {6, 102},
+	Increment = 6,
+	Suffix = "FlySpeed",
+	CurrentValue = 30,
+	Flag = "FlySpeedSlide",
+	Callback = function(Value)
+        settings.Flyspeed = Value
+	end,
+})
+
+
+local Walkspeed = MainTab:CreateButton({
+    Name = "WalkSpeed (Press E)",
+    Callback = function()
+        down = false
+        velocity = Instance.new("BodyVelocity")
+        velocity.maxForce = Vector3.new(100000, 0, 100000)
+        gyro = Instance.new("BodyGyro")
+        gyro.maxTorque = Vector3.new(100000, 0, 100000)
+        
+        
+        function onButton1Down(mouse)
+            down = true
+            velocity.Parent = Char.UpperTorso
+            velocity.velocity = (Humanoid.MoveDirection) * settings.SpeedVel
+            gyro.Parent = Char.UpperTorso
+            
+            while down do
+                if not down then break end
+                velocity.velocity = (Humanoid.MoveDirection) * settings.SpeedVel
+                local refpos = gyro.Parent.Position + (gyro.Parent.Position - workspace.CurrentCamera.CoordinateFrame.p).unit * 5
+                gyro.cframe = CFrame.new(gyro.Parent.Position, Vector3.new(refpos.x, gyro.Parent.Position.y, refpos.z))
+                wait(0.1)
+            end
+        end
+        
+        function onButton1Up(mouse)
+            velocity.Parent = nil
+            gyro.Parent = nil
+            down = false
+        end
+        
+        function onSelected(mouse)
+            mouse.KeyDown:connect(function(k) 
+                if k:lower() == settings.SpeedBind then 
+                    onButton1Down(mouse)
+                end 
+            end)
+            mouse.KeyUp:connect(function(k) 
+                if k:lower() == settings.SpeedBind then 
+                    onButton1Up(mouse)
+                end 
+            end)
+        end
+        
+        onSelected(Player:GetMouse())
+    end,
+}) 
+
+local WalkspeedSlide = MainTab:CreateSlider({
+	Name = "WS Speed",
+	Range = {6, 204},
+	Increment = 6,
+	Suffix = "WalkSpeed",
+	CurrentValue = 25,
+	Flag = "WalkSpeedd",
+	Callback = function(Value)
+        settings.SpeedVel = Value
+	end,
+})
+local KillPlayer = MainTab:CreateInput({
+	Name = "Kill Player (Unfinsished)",
+	PlaceholderText = "Type Player here",
+	RemoveTextAfterFocusLost = true,
+
+	Callback = function(Text)
+        if Text ~= '' or Text ~= ' ' then
+            FindPerson(Text)
+        end
+	end,
+})
+
+local KickPlr = MainTab:CreateInput({
+	Name = "Kick Player",
+	PlaceholderText = "Type Player here",
+	RemoveTextAfterFocusLost = true,
+
+	Callback = function(Text)
+        if Text ~= '' or Text ~= ' ' then
+            local Name = FindPerson(Text)
+            
+            if not Char:FindFirstChild("Fist") then
+                Player.Backpack.Fist.Parent = Char
+            end
+
+            local StartPos = HumanoidRP.CFrame
+            local OPlayer = Players[Name]
+            local Hrpp = OPlayer:WaitForChild("HumanoidRootPart",.2)
+            local Humm = OPlayer:WaitForChild("Humanoid",.2)
+            local Alive = true
+
+            -- Args
+            local ohInstance1 = OPlayer.Character.Humanoid
+            local ohNil2 = nil
+            local ohNumber3 = 1
+            local ohInstance4 = OPlayer.Character.Head
+            local ohBoolean5 = true
+            local ohVector36 = Vector3.new()
+            local ohBoolean7 = false
+            
+            while Alive do
+                task.wait(0.05)
+                Char.Fist.LocalScript.Script.e:FireServer(ohInstance1, ohNil2, ohNumber3, ohInstance4, ohBoolean5, ohVector36, ohBoolean7)
+                HumanoidRP.CFrame = Hrpp.CFrame
+             
+                if Humm.Health <= 25 or Alive == false then
+                    local args = {[1] = OPlayer}
+                    game:GetService("ReplicatedStorage").CarryingServer:FireServer(unpack(args))
+                repeat
+                    task.wait(0.2)
+                    HumanoidRP.CFrame = CFrame.new(-2740.23071, -184.292358, -2930.51563, -0.684846103, 0.106422901, -0.720874488, 1.90580485e-09, 0.989277601, 0.146047324, 0.728687763, 0.100019939, -0.677502871)
+                    task.wait(0.9)
+                    HumanoidRP.CFrame = StartPos
+                    task.wait(0.2)
+                    HumanoidRP.CFrame = StartPos
+                    task.wait(.2)
+                    until not Players:FindFirstChild(Name) 
+                    Alive = false
+                end
+            end
+        end
+	end,
+})
+
+local Cbrin = MainTab:CreateInput({
+	Name = "CBring Player",
+	PlaceholderText = "Type Player here",
+	RemoveTextAfterFocusLost = true,
+
+	Callback = function(Text)
+        if Text ~= '' or Text ~= ' ' then
+            local Name = FindPerson(Text)
+
+            CBringTarget(Name)
+        end
+	end,
+})
+
+local CarSpeed = MainTab:CreateInput({
+	Name = "Change Car Speed",
+	PlaceholderText = "Type Speed here (Max 999)",
+	RemoveTextAfterFocusLost = true,
+	Callback = function(Text)
+        Text = tonumber(Text)
+
+        if tonumber(Text) then
+            pcall(function()
+                local cMod = require(game:GetService("Workspace")[Player.Name.."'s Car"]["A-Chassis Tune"])
+        
+                cMod["A-Chassis Tune"]["A-Chassis Interface"]["AC6_Stock_Sound"]:Destroy()
+                cMod[Player.Name.."'s Car"]["A-Chassis Tune"]["A-Chassis Interface"]["AC6_Exhaust vibration"]:Destroy()
+            
+                cMod.LoadDelay = 0
+                cMod.Weight = 0
+                cMod.AntiRoll = 100
+                cMod.SteerSpeed = 0.10
+                cMod.Horsepower = Text
+            end)
+        else
+            return error
+        end
+	end,
+})
+local RemoveA = MainTab:CreateButton({
+    Name = "Remove Other Unwanted Stuff",
+    Callback = function()
+        spawn(function()
+            while wait() do
+                StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+                DisableBlur()
+                pcall(function()
+                    HumanoidRP.Anchored = false
+                    local ticketg = PlayerGui:WaitForChild("Ticket",.2)
+                    local karma = PlayerGui.Stats:WaitForChild('Karm',.2)
+                    PlayerGui.fad:Destroy()
+                    ticketg:Destroy()
+                    karma:Destroy()
+                    PlayerGui:WaitForChild('twitter'):Destroy()
+                    PlayerGui:WaitForChild("Dmg"):Destroy()
+                end)
+            end
+        end)
+    end,
+ })
+
+ local PunchA = MainTab:CreateButton({
+    Name = "Punch Aura (BETA)",
+    Callback = function()
+        local isonground = false
+
+        Rayfield:Notify({
+            Title = "Success!",
+            Content = "Press Y to enable/disable punchaura!",
+            Duration = 6.5,
+        })
+
+        UIS.InputBegan:Connect(function(input)
+            if input.KeyCode == settings.PunchAuraBind and settings.PunchAura then
+                Rayfield:Notify({
+                    Title = "Disabled",
+                    Content = "You've disabled punch aura",
+                    Duration = 6.5,
+                })
+                settings.PunchAura = false
+                Humanoid:UnequipTools()
+            elseif input.KeyCode == settings.PunchAuraBind and not settings.PunchAura then
+                Rayfield:Notify({
+                    Title = "enabled",
+                    Content = "You've enabled punch aura",
+                    Duration = 6.5,
+                })
+                settings.PunchAura = true
+            end
+        end)
+
+        spawn(function()
+            while true do
+                if settings.PunchAura then
+                    GetClosestPlayer()
+                
+                    pcall(function()
+                        Humanoid:EquipTool(Player.Backpack.Fist)
+                    end)
+                
+                    if Humanoid.Health <= 0 then settings.PunchAura = false return end
+                    
+                    pcall(function() 
+                    if GetClosestPlayer().Humanoid.Health < 26 then 
+                        isonground = true 
+                    else
+                        isonground = false
+                    end end)
+    
+                    pcall(function()
+                    local args = {
+                        [1] = GetClosestPlayer().Humanoid, -- victim hum
+                        [3] = 0,
+                        [4] = GetClosestPlayer()[settings.Bodypart],
+                        [5] = isonground, -- if on ground
+                        [6] = GetClosestPlayer().HumanoidRootPart.Position, -- victim pos
+                        [7] = false -- if kick
+                    }
+
+                    Char.Fist.LocalScript.Script.e:FireServer(unpack(args))
+                    end)
+                else
+                    GetClosestPlayer()
+                end
+                task.wait(.15)
+            end
+        end)
+    end,
+ })
+
+local XP = MainTab:CreateButton({
+    Name = "XP Farm",
+    Callback = function()
+        XPFarm()
+    end,
+ })
+
+
+ local Bp = MainTab:CreateButton({
+    Name = "Bypass anti cheat",
+    Callback = function()
+        task.spawn(BypassAntiCheat)
+    end,
+ })
+local Namet = MainTab:CreateButton({
+    Name = "No Nametag",
+    Callback = function()
+        pcall(function()
+            if Head.Gui then
+                Head.Gui:Destroy()
+            end
+        end)
+    end,
+ })
+ local OneT = MainTab:CreateButton({
+    Name = "One Tap",
+    Callback = function()
+        local mt = getrawmetatable(game)
+        local OldName = mt.__namecall
+        
+        setreadonly(mt, false)
+        
+            mt.__namecall = newcclosure(function(self, ...)
+                local Args = {...}
+                local Method = getnamecallmethod();
+
+                if tostring(Method) == "FireServer" and tostring(self) == "Impact" then
+                    for i = 1, 22 do
+                        OldName(self, ...)
+                    end
+                end
+
+                return OldName(self, ...)
+            end)
+    end,
+ })
+ local CTp = MainTab:CreateButton({
+    Name = "Click to Teleport",
+    Callback = function()
+        ClickTp()
+    end,
+ })
+
+ local RemvT = MainTab:CreateButton({
+    Name = "Remove Typing thing",
+    Callback = function()
+        local gmt = getrawmetatable(game)
+        setreadonly(gmt, false)
+        local oldNamecall = gmt.__namecall
+        
+        gmt.__namecall = newcclosure(function(self, ...)
+            local Args = {...}
+            local method = getnamecallmethod()
+            if tostring(self) == "Typing" and tostring(method) == "FireServer" then
+                Args[2] = false
+                return self.FireServer(self, unpack(Args))
+            end
+            return oldNamecall(self, ...)
+        end)
+    end,
+ })
+
+ local InfJump = MainTab:CreateToggle({
+	Name = "Infinite Jump",
+	CurrentValue = false,
+	Flag = "InfJump",
+	Callback = function(Value)
+        game:GetService("UserInputService").JumpRequest:connect(function()
+            if Value then
+                game:GetService"Players".LocalPlayer.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")
+            end
+        end)
+	end,
+})
+
+local NoHead = MainTab:CreateButton({
+	Name = "No Head",
+	Callback = function()
+            Head.Neck:Destroy()
+            Char.UpperTorso.NeckAttachment:Destroy()
+            Humanoid.HealthDisplayDistance = math.huge
+            Humanoid.NameDisplayDistance = math.huge
+            Head.Size = Vector3.new(0, 0, 0)
+            Head.Massless = true
+            Head.CanCollide = false
+        
+
+                pcall(function()
+                    Head.NeckRigAttachment.CFrame = CFrame.new(0, 100000,473632813, 0)
+                    Char.UpperTorso.NeckRigAttachment.CFrame = CFrame.new(0, 100000,473632813, 0)
+                    Head.CFrame = CFrame.new(0, 100000,473632813, 0)
+                end)
+                wait()
+      
+	end,
+})
+
+local InfAm = MainTab:CreateButton({
+    Name = "Inf Ammo (Equip gun first)",
+    Callback = function()
+        local oldK; oldK = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+            args = {...}
+
+            if tostring(self) == "Fire" and args[2] == true then
+                args[2] = false
+                return oldK(self, unpack(args))
+            end
+
+            return oldK(self, ...)
+        end))
+    end,
+})
+local Asdd = MainTab:CreateButton({
+    Name = "Remove Combat Gui",
+    Callback = function()
+        PlayerGui.Stats.CLog:Destroy()
+    end,
+})
+local Skittles = MainTab:CreateButton({
+    Name = "Fake Skittles Gui",
+    Callback = function()
+        pcall(function()
+            while wait() do
+                PlayerGui.Run.Value.Value = true
+                Player.Character.Resistance.Value = true
+            end
+        end)
+    end,
+}) 
+
+local Antib = MainTab:CreateButton({
+    Name = "Anti Blur",
+    Callback = function()
+        DisableBlur()
+
+        if PlayerGui.Dmg then
+            PlayerGui.Dmg:Destroy()
+        end
+    end,
+})
+
+local PickupTool = MainTab:CreateButton({
+    Name = "Pickup Tools",
+    Callback = function()
+        local Ge = game.Workspace.tools
+
+        for fk, fl in pairs((Ge:GetChildren())) do
+           if fl:IsA("Tool") and fl.Name == "Fist" and fl.Name ~= "Phone" and fl.Name ~= "Crate" then
+               game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(fl)
+               break
+           end
+        end
+    end,
+})
+
+local Firea = MainTab:CreateButton({
+    Name = "No Spread (Equip gun first)",
+    Callback = function()
+        local gun 
+
+        for i, v in next, Char:GetChildren() do
+            if v:IsA('Tool') and v:FindFirstChild('WeaponHud') then
+                gun = v
+            end
+        end
+
+        if gun:IsA('Tool') then
+            local nospead = require(gun.Stats.Local)
+            nospead.MaxSpread = 0.001
+        elseif gun == nil then
+            return
+        end
+    end,
+})
+
+local AntiRec = MainTab:CreateButton({
+    Name = "Anti Recoil",
+    Callback = function()
+        local thing = require(game:GetService("ReplicatedStorage")["Weapon_Module"])
+
+        thing.recoil = function()
+            return -30
+        end        
+    end,
+ })
+
+ local DisBob = MainTab:CreateButton({
+    Name = "Disable Camera Bob",
+    Callback = function()
+        DisableBob()
+    end,
+ })
+
+local Block = MainTab:CreateButton({
+    Name = "Blocky Head",
+    Callback = function()
+        pcall(function()
+            Head.Mesh:Destroy()
+            Head.ear2.Mesh:Destroy()
+            Head.ear.Mesh:Destroy()
+        end)
+    end,
+ })
+
+local FreeC = MainTab:CreateButton({
+    Name = "Free Camera Mode",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/sinmcity/yourmom/freecam/freecam"))()
+    end,
+ })
+
+local InfZom = MainTab:CreateButton({
+    Name = "Infinite Camera Zoom",
+    Callback = function()
+        Player.CameraMaxZoomDistance = math.random(999,1337)
+    end,
+ })
+ local InfStam = MainTab:CreateButton({
+    Name = "Infinite Stamina",
+    Callback = function()
+        local oldindex
+
+        oldindex = hookmetamethod(game,"__index",function(self,key)
+            if not checkcaller() then
+                if tostring(self) == "Stamina" and key == "Value" then
+                    return 100
+                end
+            end
+            return oldindex(self,key)
+        end)
+    end,
+}) 
+
+local InfHunger = MainTab:CreateButton({
+    Name = "Infinite Hunger",
+    Callback = function()
+        local oldindex
+        oldindex = hookmetamethod(game,"__index",function(self,key)
+            if not checkcaller() then
+                if tostring(self) == "Hunger" and key == "Value" then
+                    return 100
+                end
+            end
+            return oldindex(self,key)
+        end)
+    end,
+}) 
+
+local Cras = MainTab:CreateButton({
+    Name = "Crash (Prob doesnt work)",
+    Callback = function()
+        while (true) do 
+                
+        end
+    end,
+ })
+local Tp1 = Teleports:CreateButton({
+    Name = "Apartment 1",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-176.541977, -457.964905, -69.6778412, 0.0172199383, -7.30185334e-08, 0.999851704, -1.86776674e-08, 1, 7.33510319e-08, -0.999851704, -1.99379979e-08, 0.0172199383)
+    end,
+ })
+local Tp1 = Teleports:CreateButton({
+    Name = "Apartment 1",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-176.541977, -457.964905, -69.6778412, 0.0172199383, -7.30185334e-08, 0.999851704, -1.86776674e-08, 1, 7.33510319e-08, -0.999851704, -1.99379979e-08, 0.0172199383)
+    end,
+ })
+ local Tp2 = Teleports:CreateButton({
+    Name = "Apartment 2",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-175.904221, -457.964905, -493.479797, 0.0789805874, -2.37789219e-08, 0.99687618, -4.13485459e-08, 1, 2.71294027e-08, -0.99687618, -4.33620748e-08, 0.0789805874)
+    end,
+ })
+ local Tp3 = Teleports:CreateButton({
+    Name = "Apartment 3",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-0.532082677, -457.913483, -112.602715, -0.000539803877, -4.52883206e-08, -0.999999881, 6.60640032e-09, 1, -4.52918947e-08, 0.999999881, -6.63084831e-09, -0.000539803877)
+    end,
+ })
+ local Tp4 = Teleports:CreateButton({
+    Name = "Sports Direct",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-195.589691, -463.662384, 92.2535934, 0.238895774, 2.38148239e-08, 0.971045196, 3.21983293e-08, 1, -3.24463443e-08, -0.971045196, 3.90173298e-08, 0.238895774)
+    end,
+ })
+ local Tp5 = Teleports:CreateButton({
+    Name = "Tescos",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(983.751831, -446.635803, 103.678848, -0.381174803, -9.88733646e-08, -0.924502969, -2.49378118e-08, 1, -9.66656728e-08, 0.924502969, -1.37914373e-08, -0.381174803)
+    end,
+ })
+ local Tp6 = Teleports:CreateButton({
+    Name = "New London",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(612.033203, -400.384491, -106.705254, -0.0193231795, -7.59797825e-09, 0.999813318, 1.18716381e-09, 1, 7.62234187e-09, -0.999813318, 1.33423006e-09, -0.0193231795)
+    end,
+ })
+ local Tp7 = Teleports:CreateButton({
+    Name = "Ultimate Drip",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(479.154602, -395.400482, -91.1273499, 0.216078922, 1.49673074e-08, 0.976375878, -1.26980304e-09, 1, -1.50484354e-08, -0.976375878, 2.01184469e-09, 0.216078922)
+    end,
+ })
+ local Tp8 = Teleports:CreateButton({
+    Name = "Gun/Melee Dealer",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(55.4791451, 4.1782546, -126.901131, 0.997650862, -1.03924357e-07, 0.0685039684, 1.04001337e-07, 1, 2.44261367e-09, -0.0685039684, 4.68762895e-09, 0.997650862)
+    end,
+ })
+ local Tp9 = Teleports:CreateButton({
+    Name = "Mask/Skittles",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-176.336624, -0.500741839, 146.262192, 0.00358911627, 3.95761042e-08, -0.999993563, 3.16052393e-08, 1, 3.96897946e-08, 0.999993563, -3.174749e-08, 0.00358911627)
+    end,
+ })
+ local Tp10 = Teleports:CreateButton({
+    Name = "Turkish Barber",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(223.995895, -347.569946, 874.736816, 0.89640069, 6.32670947e-08, -0.443244576, -2.20718714e-08, 1, 9.8099008e-08, 0.443244576, -7.81527802e-08, 0.89640069)
+    end,
+ })
+ local Tp11 = Teleports:CreateButton({
+    Name = "Female Barber",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-285.492859, -347.569977, 1315.14221, 0.976763368, -4.70047361e-08, -0.214320675, 5.06192883e-08, 1, 1.1377014e-08, 0.214320675, -2.19614105e-08, 0.976763368)
+    end,
+ })
+ local Tp12 = Teleports:CreateButton({
+    Name = "Urban Farm",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-148.975693, -346.269897, 1329.96362, 0.160105869, 1.77326021e-09, 0.987099826, -2.56679095e-10, 1, -1.75480153e-09, -0.987099826, 2.75861348e-11, 0.160105869)
+    end,
+ })
+ local Tp13 = Teleports:CreateButton({
+    Name = "Tattoo Place",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-286.175018, -347.569946, 1316.57288, 0.954570174, 8.2568512e-08, -0.29798618, -8.18485191e-08, 1, 1.48945078e-08, 0.29798618, 1.01718758e-08, 0.954570174)
+    end,
+ })
+ local Tp14 = Teleports:CreateButton({
+    Name = "Car Dealership",
+    Callback = function()
+        HumanoidRP.CFrame = CFrame.new(-186.654739, -463.662415, 1174.18298, 0.130901337, 5.79686592e-08, -0.991395414, 5.18117593e-09, 1, 5.91558944e-08, 0.991395414, -1.28801796e-08, 0.130901337)
+    end,
+ })
+ local Bypas = Teleports:CreateButton({
+    Name = "Bypass apartments",
+    Callback = function()
+        game.ReplicatedStorage.Places.Parent = game.Workspace
+    end,
+ })
