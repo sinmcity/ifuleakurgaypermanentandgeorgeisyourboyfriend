@@ -87,7 +87,7 @@ local RootBypass = function()
         end)
         
         setreadonly(GameMT, true)
-    end
+    
 end
 
 local BypassAntiCheat = function()
